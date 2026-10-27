@@ -1,0 +1,25 @@
+{
+  "name": "arthur-desktop",
+  "productName": "Arthur",
+  "version": "1.0.0",
+  "description": "亚瑟 · 离线桌面小宠物",
+  "private": true,
+  "main": "main.cjs",
+  "author": "Kevin",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/model.test.cjs",
+    "test:app": "node test/app.cjs",
+    "package": "node scripts/package.cjs"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.0.0",
+    "playwright-core": "1.64.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kevinlove0712/arthur-desktop.git"
+  }
+}
