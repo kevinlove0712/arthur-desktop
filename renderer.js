@@ -1,4 +1,4 @@
-const { states, frameAt, lookDirection } = window.ArthurModel;
+const { states, frameAt, lookDirection, jitter } = window.ArthurModel;
 const canvas = document.getElementById('pet');
 const ctx = canvas.getContext('2d');
 const atlas = new Image();
@@ -9,13 +9,14 @@ const maskContext = mask.getContext('2d', { willReadFrequently: true });
 let pixels, current = 'idle', started = performance.now(), until = 0, dragging = null;
 let pointer = { x: -10000, y: -10000 }, settings = { follow: true, spontaneous: true };
 let lastCell = '', pointerDown = null, clickTimer;
-let nextAction = performance.now() + 18000;
+let nextAction = performance.now() + jitter(30), walking = null, lastBusy;
+function scheduleAction() { nextAction = performance.now() + jitter(settings.actionSeconds || 30); }
 
 function play(state) {
   if (!states[state]) return;
   current = state; started = performance.now();
   until = state === 'idle' ? 0 : started + states[state].times.reduce((a, b) => a + b, 0) * (state === 'running' ? 3 : 1);
-  nextAction = started + 18000 + Math.random() * 18000;
+  scheduleAction();
 }
 
 function hit(point) {
@@ -38,13 +39,15 @@ function draw(row, col) {
 function tick() {
   const now = performance.now();
   if (until && now >= until) { current = 'idle'; started = now; until = 0; }
-  if (!pointerDown && !dragging && !until && settings.spontaneous && now > nextAction) {
+  if (!pointerDown && !dragging && !walking && !until && settings.spontaneous && now > nextAction) {
     const options = ['waving', 'waiting', 'review', 'running', 'failed'];
     play(options[Math.floor(Math.random() * options.length)]);
   }
   const dx = pointer.x - 96, dy = pointer.y - 65;
-  let state = dragging || current;
-  if (!dragging && !until && settings.follow && !pointerDown && Math.hypot(dx, dy) < 380 && Math.hypot(dx, dy) > 65 && !hit(pointer)) {
+  let state = dragging || walking || current;
+  const busy = !!pointerDown || !!until;
+  if (busy !== lastBusy) { lastBusy = busy; window.arthur.busy(busy); }
+  if (!dragging && !walking && !until && settings.follow && !pointerDown && Math.hypot(dx, dy) < 380 && Math.hypot(dx, dy) > 65 && !hit(pointer)) {
     const direction = lookDirection(dx, dy);
     draw(9 + Math.floor(direction / 8), direction % 8);
     state = 'look';
@@ -54,8 +57,10 @@ function tick() {
   window.arthur.hit(interactive);
 }
 
-window.arthur.onSettings(value => { settings = value; });
+window.arthur.onSettings(value => { settings = value; scheduleAction(); });
 window.arthur.onAction(play);
+window.arthur.onResetTimer(scheduleAction);
+window.arthur.onWalk(value => { walking = value; started = performance.now(); if (!value) play('idle'); });
 window.arthur.onPointer(value => { pointer = value; });
 window.arthur.onDrag(value => {
   const wasDragging = dragging;

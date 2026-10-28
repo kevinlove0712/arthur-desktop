@@ -1,16 +1,17 @@
 {
   "name": "arthur-desktop",
   "productName": "Arthur",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "亚瑟 · 离线桌面小宠物",
   "private": true,
   "main": "main.cjs",
   "author": "Kevin",
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/model.test.cjs",
+    "test": "node --test test/*.test.cjs",
     "test:app": "node test/app.cjs",
-    "package": "node scripts/package.cjs"
+    "package": "node scripts/package.cjs",
+    "test:features": "node test/features.cjs"
   },
   "devDependencies": {
     "@electron/packager": "20.3.0",

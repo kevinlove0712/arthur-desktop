@@ -1,5 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('arthur', {
+  busy: value => ipcRenderer.send('pet:busy', value),
+  onWalk: callback => ipcRenderer.on('pet:walk', (_event, value) => callback(value)),
+  onResetTimer: callback => ipcRenderer.on('pet:reset-timer', () => callback()),
   ready: () => ipcRenderer.send('pet:ready'),
   hit: value => ipcRenderer.send('pet:hit', value),
   menu: () => ipcRenderer.send('pet:menu'),

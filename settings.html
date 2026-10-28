@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'">
+  <title>亚瑟 · 设置</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <main>
+    <header><h1>亚瑟的日常</h1><p>陪伴的节奏，由你决定。</p></header>
+    <form id="settings">
+      <section>
+        <h2>大小与互动</h2>
+        <label class="line">大小 <span><input id="sizePercent" type="number" min="50" max="200" step="1" required> %</span></label>
+        <p class="hint">默认 100%，可设置 50%～200%。</p>
+        <label class="line">目光跟随鼠标 <input id="follow" type="checkbox"></label>
+        <label class="line">保持在最上层 <input id="top" type="checkbox"></label>
+      </section>
+      <section>
+        <label class="line heading">偶尔动一动 <input id="spontaneous" type="checkbox"></label>
+        <label class="line">基础间隔 <span><input id="actionSeconds" type="number" min="5" max="86400" step="1" required> 秒</span></label>
+        <p id="actionRange" class="hint"></p>
+      </section>
+      <section>
+        <label class="line heading">在屏幕上走动 <input id="walking" type="checkbox"></label>
+        <label class="line">走完后休息 <span><input id="walkSeconds" type="number" min="10" max="86400" step="1" required> 秒</span></label>
+        <p id="walkRange" class="hint"></p>
+        <fieldset><legend>活动范围 · 当前所在屏幕</legend>
+          <div class="presets">
+            <label><input type="radio" name="walkRegion" value="bottom">底部一排</label>
+            <label><input type="radio" name="walkRegion" value="all">整个屏幕</label>
+          </div>
+          <div class="grid" aria-label="屏幕九宫格">
+            <label><input type="radio" name="walkRegion" value="0">左上</label>
+            <label><input type="radio" name="walkRegion" value="1">上中</label>
+            <label><input type="radio" name="walkRegion" value="2">右上</label>
+            <label><input type="radio" name="walkRegion" value="3">左中</label>
+            <label><input type="radio" name="walkRegion" value="4">中间</label>
+            <label><input type="radio" name="walkRegion" value="5">右中</label>
+            <label><input type="radio" name="walkRegion" value="6">左下</label>
+            <label><input type="radio" name="walkRegion" value="7">下中</label>
+            <label><input type="radio" name="walkRegion" value="8">右下</label>
+          </div>
+        </fieldset>
+        <p class="hint">默认底部一排。若在范围外，先走入所选区域；拖动或打开菜单时暂停。格子太小时以屏幕边界为准。</p>
+      </section>
+      <section>
+        <label class="line heading">整点提醒 <input id="hourly" type="checkbox"></label>
+        <p class="hint">随机一句文案和一个动作，显示 12 秒。睡眠期间错过的整点不补报。</p>
+        <button type="button" id="preview">预览提醒</button>
+      </section>
+      <button class="primary" type="submit">保存并生效</button>
+      <p id="status" role="status" aria-live="polite"></p>
+    </form>
+    <section>
+      <h2>自定义文件</h2>
+      <p class="hint">设置和文案都在同一个文件夹。手动编辑后重启生效；在此保存会重写“设置.txt”。</p>
+      <button id="folder">打开自定义文件夹</button>
+      <p class="path" id="directory"></p>
+    </section>
+    <footer><span id="version"></span><button id="update">检查更新</button></footer>
+    <p class="hint">当前免安装版需下载后手动替换，保留自定义文件夹。仅检查更新时联网。</p>
+    <p id="updateStatus" role="status" aria-live="polite"></p>
+  </main>
+  <script src="settings.js"></script>
+</body>
+</html>

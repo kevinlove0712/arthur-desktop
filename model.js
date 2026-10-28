@@ -36,10 +36,18 @@
   }
 
   function cleanSettings(value = {}) {
-    const sizes = [0.8, 1, 1.25, 1.5];
+    if (!value || typeof value !== 'object') value = {};
+    const number = (input, fallback, min, max) => typeof input === 'number' && Number.isFinite(input) && input >= min && input <= max ? Math.round(input) : fallback;
+    const sizePercent = number(value.sizePercent, number(value.size * 80, 100, 50, 200), 50, 200);
     return {
-      size: sizes.includes(value.size) ? value.size : 1.25,
+      sizePercent,
+      size: sizePercent / 80,
       spontaneous: value.spontaneous !== false,
+      actionSeconds: number(value.actionSeconds, 30, 5, 86400),
+      walking: value.walking !== false,
+      walkSeconds: number(value.walkSeconds, 120, 10, 86400),
+      walkRegion: ['all', 'bottom', ...Array.from({ length: 9 }, (_, i) => String(i))].includes(value.walkRegion) ? value.walkRegion : 'bottom',
+      hourly: value.hourly !== false,
       follow: value.follow !== false,
       top: value.top !== false,
       position: value.position && Number.isFinite(value.position.x) && Number.isFinite(value.position.y)
@@ -47,7 +55,34 @@
     };
   }
 
-  const api = { states, frameAt, lookDirection, clampBounds, cleanSettings };
+  function jitter(seconds, random = Math.random) { return seconds * (0.8 + random() * 0.4) * 1000; }
+
+  function walkingArea(area, region) {
+    if (region === 'all') return { ...area };
+    if (region === 'bottom') return { ...area, y: area.y + area.height * 2 / 3, height: area.height / 3 };
+    const cell = Number(region);
+    return { x: area.x + (cell % 3) * area.width / 3, y: area.y + Math.floor(cell / 3) * area.height / 3, width: area.width / 3, height: area.height / 3 };
+  }
+
+  function walkTarget(bounds, area, region, random = Math.random) {
+    const zone = walkingArea(area, region);
+    // Keep the entire pet in the work area even when a grid cell is smaller than it.
+    return clampBounds({ ...bounds,
+      x: zone.x + random() * Math.max(0, zone.width - bounds.width),
+      y: zone.y + random() * Math.max(0, zone.height - bounds.height)
+    }, area);
+  }
+
+  function hourKey(date) {
+    return [date.getFullYear(), date.getMonth(), date.getDate(), date.getHours()].join('-');
+  }
+
+  function hourlyDue(previous, date) {
+    // Do not replay missed hours after sleep, or announce immediately on launch.
+    return previous !== hourKey(date) && date.getMinutes() === 0;
+  }
+
+  const api = { states, frameAt, lookDirection, clampBounds, cleanSettings, jitter, walkingArea, walkTarget, hourKey, hourlyDue };
   if (typeof module !== 'undefined') module.exports = api;
   else root.ArthurModel = api;
 })(globalThis);

@@ -68,5 +68,5 @@ const { states } = require('../model.js');
     const runtime = await application.evaluate(() => ({ platform: process.platform, arch: process.arch, electron: process.versions.electron }));
     fs.writeFileSync(path.join(output, 'result.json'), JSON.stringify({ ok: true, runtime, security, states: reports, interactions: ['single click jump and return', 'double click wave', 'drag window -40,-30'], beforeDrag, afterDrag, window, errors }, null, 2));
     console.log('Desktop app smoke test passed:', output);
-  } finally { await application.close(); }
+  } finally { await application.close(); fs.rmSync(data, { recursive: true, force: true }); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

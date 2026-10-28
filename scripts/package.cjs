@@ -7,6 +7,7 @@ const crypto = require('node:crypto');
   const { packager } = await import('@electron/packager');
   const source = path.resolve(__dirname, '..');
   const root = source;
+  const version = require(path.join(source, 'package.json')).version;
   const staging = process.env.ARTHUR_BUILD_DIR || path.join(source, 'build');
   const release = path.join(root, 'releases');
   fs.mkdirSync(release, { recursive: true });
@@ -22,7 +23,7 @@ const crypto = require('node:crypto');
     const [output] = await packager({
       dir: source, name: 'Arthur', executableName: 'Arthur', appBundleId: 'com.kevin.arthurdesktop',
       platform: config.platform, arch: config.arch, electronVersion: '45.0.0',
-      appVersion: '1.0.0', buildVersion: '1.0.0', asar: true,
+      appVersion: version, buildVersion: version, asar: true,
       out: staging, overwrite: true, prune: true,
       ignore: [/^\/(test|scripts|build|releases|checks|docs)(\/|$)/, /^\/\.git/],
       icon: path.join(source, 'assets', config.platform === 'darwin' ? 'icon.icns' : 'icon.ico'),
@@ -35,16 +36,13 @@ const crypto = require('node:crypto');
       execFileSync('codesign', ['--force', '--deep', '--sign', '-', bundle], { stdio: 'inherit' });
       execFileSync('codesign', ['--verify', '--deep', '--strict', bundle], { stdio: 'inherit' });
     }
+    fs.cpSync(path.join(root, '自定义'), path.join(output, '自定义'), { recursive: true });
     fs.copyFileSync(path.join(root, '使用说明.txt'), path.join(output, 'README.txt'));
     fs.copyFileSync(path.join(root, 'LICENSE'), path.join(output, 'LICENSE.txt'));
     fs.copyFileSync(path.join(root, '发行检查记录.txt'), path.join(output, 'RELEASE-NOTES.txt'));
-    const zip = path.join(release, `Arthur-1.0.0-${config.label}.zip`);
+    const zip = path.join(release, `Arthur-${version}-${config.label}.zip`);
     if (fs.existsSync(zip)) fs.unlinkSync(zip);
-    if (config.platform === 'darwin') {
-      execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', output, zip]);
-    } else {
-      execFileSync('zip', ['-q', '-r', zip, path.basename(output)], { cwd: path.dirname(output) });
-    }
+    execFileSync('python3', [path.join(__dirname, 'zip.py'), output, zip]);
     const sha256 = crypto.createHash('sha256').update(fs.readFileSync(zip)).digest('hex');
     fs.writeFileSync(`${zip}.sha256`, `${sha256}  ${path.basename(zip)}\n`);
     console.log(JSON.stringify({ target, output, zip, bytes: fs.statSync(zip).size, sha256 }));
